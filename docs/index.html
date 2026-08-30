@@ -191,7 +191,7 @@ function renderWeek(w){
       +'<div class="lesson-head"><span class="lt">'+(L.title||L.id)+'</span></div>'
       +'<div class="md" data-lid="'+L.id+'">'+(window.marked?marked.parse(L.markdown||'内容待补'):'<pre>'+String(L.markdown||'内容待补').replace(/</g,'&lt;')+'</pre>')+'</div></div>';
   }
-  html+='<div class="hw">🐾 <b>本周作业</b>：交到 <code>thawpaw/homework/</code> 目录（作业命名 <code>'+w.week_id+'-LXX-practice.py</code> 上手练习 / <code>'+w.week_id+'-LXX-homework.py</code> 课后作业，如 <code>W01-L01-practice.py</code>），<b>不要在建周子目录</b>——文件名已有周次前缀。做完 commit，检查人批改后评语出现在 <code>thawpaw/reviews/</code>。<br>· ThawPaw → IcePaw 检查 · Tree → 如意检查</div>';
+  html+='<div class="hw">🐾 <b>本周作业</b>（以 ThawPaw 为例）：交到 <code>thawpaw/homework/</code> 目录（Tree 对应 <code>tree/homework/</code>；命名 <code>'+w.week_id+'-LXX-practice.py</code> 上手练习 / <code>'+w.week_id+'-LXX-homework.py</code> 课后作业，平铺不建周子目录）。<b>交完作业要跟各自的 mentor 说一声才会批改</b>（ThawPaw → IcePaw 检查 · Tree → 如意检查），评语出现在各自的 <code>reviews/</code> 目录。</div>';
   $('#content').innerHTML=html;
   // 课文内自查清单 checkbox：激活 marked 默认 disabled + 本机持久化（2026-08-30 Tree 反馈）
   // 注：本段必须活在 renderWeek 内——每次渲染后重新激活，放函数外只在首载空跑一次（本次修复的根因）
