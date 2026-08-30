@@ -49,6 +49,7 @@ h1{font-size:1.6rem}
 .lesson-head input[type=checkbox]{width:18px;height:18px;accent-color:var(--ok);cursor:pointer;flex-shrink:0}
 .lesson-head .lt{font-weight:700;font-size:1rem;flex:1}
 .lesson.done{border-color:rgba(62,207,142,.35)}
+.md input[type=checkbox]{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;margin-right:6px;vertical-align:-2px}
 .md{font-size:.92rem;line-height:1.8;color:var(--text);overflow-wrap:break-word}
 .md h1,.md h2,.md h3{margin:14px 0 8px;font-size:1.05rem}
 .md p{margin:8px 0}
@@ -74,7 +75,7 @@ footer{text-align:center;color:var(--text2);font-size:.75rem;margin-top:30px}
 <div class="wrap">
   <header>
     <h1>🏖️ 沙坑训练场</h1>
-    <span class="sub">Skyclan 家庭 12 周课程 · 一套材料，两位学员（苗苗 🐱 × Tree 🌳）</span>
+    <span class="sub">Skyclan 家庭 12 周课程 · 一套材料，两位学员（ThawPaw 🐱 × Tree 🌳）</span>
     <a class="home-link" href="https://games.thawflow.com/" target="_blank" rel="noopener">🎮 游戏大本营 ↗</a>
   </header>
   <div class="notice">
@@ -176,11 +177,12 @@ function renderWeek(w){
     if(!checked)allDone=false;
     html+='<div class="lesson'+(checked?' done':'')+'">'
       +'<div class="lesson-head"><input type="checkbox" data-k="'+key+'"'+(checked?' checked':'')+'><span class="lt">'+(L.title||L.id)+'</span></div>'
-      +'<div class="md">'+(window.marked?marked.parse(L.markdown||'内容待补'):(L.markdown||'内容待补'))+'</div></div>';
+      +'<div class="md" data-lid="'+L.id+'">'+(window.marked?marked.parse(L.markdown||'内容待补'):'<pre>'+String(L.markdown||'内容待补').replace(/</g,'&lt;')+'</pre>')+'</div></div>';
   }
-  html+='<div class="hw">🐾 <b>本周作业</b>：在你的电脑 <code>~/learning-homework/</code> 下建 <code>'+w.week_id+'/</code> 目录，作业命名 <code>'+w.week_id+'-d1.py</code>（周-天）。做完 commit，检查人批改后会出现 <code>*.review.md</code>。<br>· 苗苗 → IcePaw 检查 · Tree → 如意检查</div>';
+  html+='<div class="hw">🐾 <b>本周作业</b>：在你的电脑 <code>~/learning-homework/</code> 下建 <code>'+w.week_id+'/</code> 目录，作业命名 <code>'+w.week_id+'-d1.py</code>（周-天）。做完 commit，检查人批改后会出现 <code>*.review.md</code>。<br>· ThawPaw → IcePaw 检查 · Tree → 如意检查</div>';
   $('#content').innerHTML=html;
-  $('#content').querySelectorAll('input[type=checkbox]').forEach(cb=>{
+  // 课时级勾选（原有）
+  $('#content').querySelectorAll('.lesson-head input[type=checkbox]').forEach(cb=>{
     cb.onchange=()=>{
       prog[cb.dataset.k]=cb.checked;
       localStorage.setItem(PROG_KEY,JSON.stringify(prog));
@@ -190,6 +192,16 @@ function renderWeek(w){
     };
   });
 }
+  // 课文内自查清单 checkbox：激活 marked 默认 disabled + 本机持久化（2026-08-30 Tree 反馈）
+  const hsh=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36)};
+  const checks=JSON.parse(localStorage.getItem('learning-checks')||'{}');
+  $('#content').querySelectorAll('.md input[type=checkbox]').forEach(cb=>{
+    const li=cb.closest('li'),mdDiv=cb.closest('.md');
+    const k=w.week_id+':'+(mdDiv?mdDiv.dataset.lid:'?')+':'+hsh(li?li.textContent.trim().slice(0,60):'x');
+    cb.disabled=false;
+    cb.checked=!!checks[k];
+    cb.onchange=()=>{checks[k]=cb.checked;localStorage.setItem('learning-checks',JSON.stringify(checks));};
+  });
 loadIndex();
 $('#bt').textContent=BUILD_TIME==='DEV'?'DEV build':'v'+BUILD_TIME;
 </script>

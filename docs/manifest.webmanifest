@@ -1,7 +1,7 @@
 {
   "name": "沙坑训练场",
   "short_name": "沙坑",
-  "description": "苗苗 × Tree 的家庭 Python 课程：每周课程、练习与作业进度",
+  "description": "ThawPaw × Tree 的家庭 Python 课程：每周课程、练习与作业进度",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
