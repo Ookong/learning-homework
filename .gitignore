@@ -1,2 +1,7 @@
 .DS_Store
-thawpaw/
+# 学员目录：只保留目录结构（.gitkeep 占位），默认不上传作业内容
+# 交作业时选择性上传：git add -f tree/w01-l02.py
+thawpaw/*
+!thawpaw/.gitkeep
+tree/*
+!tree/.gitkeep
