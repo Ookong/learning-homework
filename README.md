@@ -1,16 +1,6 @@
-# 📚 家庭编程学习作业本
+# 🏖️ 沙坑训练场 · learning.thawflow.com
 
-## 目录结构
-- `miaomiao/` — 苗苗的作业（W01/ W02/…每周一子目录）
-- `tree/` — 猴哥的作业（同上）
-- `shared/` — 共享材料（课件导出、练习数据）
+GitHub Pages 站点仓：网站文件在 `docs/`（push 即发布）。
 
-## 规矩（2026-08-25 Tree 定）
-- 每周目录：`w01/`、`w02/`…作业文件命名 `w01-d1.py`（周-天）
-- 检查人：苗苗作业 → IcePaw；猴哥作业 → 如意
-- 批改落盘：同目录同名 `.review.md`（如 `w01-d1.py.review.md`）
-- 每日作业完成后 commit；每周日如意发新课 + 汇总点评
-
-## Git 同步
-- 本仓库 git init 于 IcePaw 的 MacBook（本机）
-- 同步方案见 chatroom 8/25 消息
+- 课程内容生产规范：`skyclan-chatroom/docs/course-mentor-spec.md`（v1.1）
+- 作业区与内部文档：私有存储，不进本仓
