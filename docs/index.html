@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="沙坑训练场">
-<script>var BUILD_TIME="20260830-1001"
+<script>var BUILD_TIME="20260830-1935"
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 <style>
 :root{--bg:#0f1420;--card:#171e2e;--card2:#1e2740;--border:#2a3550;--text:#e8ecf4;--text2:#8b96ad;--accent:#5b9dff;--accent2:#7c6cff;--ok:#3ecf8e;--warn:#ffb454}
@@ -46,7 +46,6 @@ h1{font-size:1.6rem}
 .wk-meta{color:var(--text2);font-size:.82rem;margin-bottom:18px}
 .lesson{border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;background:var(--card2)}
 .lesson-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.lesson-head input[type=checkbox]{width:18px;height:18px;accent-color:var(--ok);cursor:pointer;flex-shrink:0}
 .lesson-head .lt{font-weight:700;font-size:1rem;flex:1}
 .lesson.done{border-color:rgba(62,207,142,.35)}
 .md input[type=checkbox]{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;margin-right:6px;vertical-align:-2px}
@@ -95,7 +94,7 @@ footer{text-align:center;color:var(--text2);font-size:.75rem;margin-top:30px}
 <script src="vendor/marked.min.js"></script>
 <script src="track.js?v=4" defer></script>
 <script>
-// 📊 学习互动埋点 v1（2026-08-30 猴哥设计）：点击 = 正在学习的信号，上报 click:* 事件供沙坑融合统计
+// 📊 学习互动埋点 v1（2026-08-30 Tree 设计）：点击 = 正在学习的信号，上报 click:* 事件供沙坑融合统计
   document.addEventListener('click', function (ev) {
     try {
       var t = ev.target;
@@ -112,8 +111,6 @@ footer{text-align:center;color:var(--text2);font-size:.75rem;margin-top:30px}
 <script>
 const API='https://tpg-hq.thawflow.com';
 const $=s=>document.querySelector(s);
-const PROG_KEY='learning-progress';
-let prog={};try{prog=JSON.parse(localStorage.getItem(PROG_KEY)||'{}')}catch(e){}
 let weeksData=[],curWeek=null;
 
 async function fetchJSON(url,timeout){
@@ -188,30 +185,16 @@ async function loadWeek(id){
 }
 function renderWeek(w){
   const lessons=w.lessons||[];
-  let allDone=true;
   let html='<div class="wk-title">'+(w.title||w.week_id)+'</div><div class="wk-meta">发布：'+(w.published_at?w.published_at.slice(0,10):'—')+' · '+lessons.length+' 课</div>';
   for(const L of lessons){
-    const key=w.week_id+':'+L.id;
-    const checked=!!prog[key];
-    if(!checked)allDone=false;
-    html+='<div class="lesson'+(checked?' done':'')+'">'
-      +'<div class="lesson-head"><input type="checkbox" data-k="'+key+'"'+(checked?' checked':'')+'><span class="lt">'+(L.title||L.id)+'</span></div>'
+    html+='<div class="lesson">'
+      +'<div class="lesson-head"><span class="lt">'+(L.title||L.id)+'</span></div>'
       +'<div class="md" data-lid="'+L.id+'">'+(window.marked?marked.parse(L.markdown||'内容待补'):'<pre>'+String(L.markdown||'内容待补').replace(/</g,'&lt;')+'</pre>')+'</div></div>';
   }
   html+='<div class="hw">🐾 <b>本周作业</b>：交到 <code>thawpaw/homework/</code> 目录（作业命名 <code>'+w.week_id+'-xxx.py</code>，如 W01-robot.py），做完 commit，检查人批改后评语出现在 <code>thawpaw/reviews/</code>。<br>· ThawPaw → IcePaw 检查 · Tree → 如意检查</div>';
   $('#content').innerHTML=html;
-  // 课时级勾选（原有）
-  $('#content').querySelectorAll('.lesson-head input[type=checkbox]').forEach(cb=>{
-    cb.onchange=()=>{
-      prog[cb.dataset.k]=cb.checked;
-      localStorage.setItem(PROG_KEY,JSON.stringify(prog));
-      localStorage.setItem('learning-week-'+w.week_id,lessons.every(L=>prog[w.week_id+':'+L.id])?'1':'0');
-      cb.closest('.lesson').classList.toggle('done',cb.checked);
-      renderWeeks();
-    };
-  });
-}
   // 课文内自查清单 checkbox：激活 marked 默认 disabled + 本机持久化（2026-08-30 Tree 反馈）
+  // 注：本段必须活在 renderWeek 内——每次渲染后重新激活，放函数外只在首载空跑一次（本次修复的根因）
   const hsh=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36)};
   const checks=JSON.parse(localStorage.getItem('learning-checks')||'{}');
   $('#content').querySelectorAll('.md input[type=checkbox]').forEach(cb=>{
@@ -219,8 +202,27 @@ function renderWeek(w){
     const k=w.week_id+':'+(mdDiv?mdDiv.dataset.lid:'?')+':'+hsh(li?li.textContent.trim().slice(0,60):'x');
     cb.disabled=false;
     cb.checked=!!checks[k];
-    cb.onchange=()=>{checks[k]=cb.checked;localStorage.setItem('learning-checks',JSON.stringify(checks));};
+    cb.onchange=()=>{
+      checks[k]=cb.checked;
+      localStorage.setItem('learning-checks',JSON.stringify(checks));
+      syncDone();
+    };
   });
+  // 章节标题不带勾选框（2026-08-30 Tree 反馈：章节性质不加 checkbox）——完成态改由清单推导：
+  // 课时 done = 该课清单全勾；周 done = 全部课时 done（侧边栏绿点数据源不变）
+  function syncDone(){
+    let allDone=true;
+    $('#content').querySelectorAll('.lesson').forEach(le=>{
+      const boxes=le.querySelectorAll('.md input[type=checkbox]');
+      const done=boxes.length>0&&Array.from(boxes).every(b=>b.checked);
+      le.classList.toggle('done',done);
+      if(!done)allDone=false;
+    });
+    localStorage.setItem('learning-week-'+w.week_id,allDone?'1':'0');
+    renderWeeks();
+  }
+  syncDone();
+}
 loadIndex();
 $('#bt').textContent=BUILD_TIME==='DEV'?'DEV build':'v'+BUILD_TIME;
 </script>
