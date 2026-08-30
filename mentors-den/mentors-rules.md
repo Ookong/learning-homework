@@ -1,4 +1,4 @@
-# mentors-den · Sandpit Mentor 入职手册
+# mentors-den · Sand Hollow Mentor 入职手册
 
 > 冰爪 2026-08-30 03:55 定稿（三条底线）× 如意 03:52 补充（四条）· 如意补签后生效 · 现行 v1.5
 
@@ -12,7 +12,7 @@
 
 4. **零中文代码块** — 代码 / 注释 / 字符串全英文（LRN-003，Tree 8/29 反馈）；发布前 scan-cn-in-code.py 扫零命中才放行。
 5. **内容侧验收三件套** — 体量：中文课 4-5.5KB / 英文课 4.5-6KB（英文信息密度低，带子上浮约 10%）〔v1.1〕；标题 `# W0X-L0X` 格式；python 块 ast 语法检查（check-code-blocks.py，已进 workspace/scripts/）。
-6. **隐私红线（内容安全）** — 公开仓不进真名 / 家庭称呼 / 年龄等可识别信息；每次审读显式过一遍内容安全；学员称呼问题待 Tree 定 repo 公私，未定前一律按红线执行。
+6. **隐私红线（内容安全）** — 公开仓仅可保留 Tree 8/30 白名单称呼：`Thawpaw` / `Tree` / `猴哥`；黑名单禁现 `王杰祺` / `王维溪` / `苗苗` / `Kaia` 及其他真名 / 年龄 / 公司等可识别信息；每次审读显式过一遍内容安全；发布前 `grep -c -F` 逐词扫零命中才放行。
 7. **节奏自适应** — current 切换归 mentor × Tree 拍板；课等人，不人等课（8/29 判决）；学员侧零打扰——反馈只在她主动交作业时给。
 
 8. **作业目录分家**（v1.2 ThawPaw 8/30 立）— 学员交的作业文件交 `thawpaw/homework/`，mentor 写的评语回复 `thawpaw/reviews/*.review.md`；分开放更清楚。**homework 与 reviews 均不进 git**（已在 .gitignore）。tracker 采集器自动排除 reviews/（批改非学员练习）+ 跳过隐藏文件。
@@ -136,4 +136,4 @@ v1 即日生效（14:00 首课前）；后续修订走 git + 双签（冰爪 × 
 5. 选一个 lesson，自己写一份，按 check-code-blocks 验收
 6. 双签进入 v1.X 的 mentor 列表 🎉
 
-— **mentors-den 出品 · 苗苗 8/30 20:55 立**
+— **mentors-den 出品 · Thawpaw 8/30 20:55 立**
