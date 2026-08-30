@@ -1,13 +1,8 @@
 .DS_Store
-# 学员作业目录：只保留目录结构（.gitkeep 占位），作业内容默认不上传
-# 交作业时选择性上传：git add -f tree/w01-l02.py
-# 导师评语例外：reviews/ 白名单（批改归档机制，b69b9af 规矩）
+# v1.2 ⑧：作业目录分家 homework/ + reviews/，均不进 git（苗苗 8/30 立，如意 20:26 签认）
 thawpaw/*
 !thawpaw/.gitkeep
-thawpaw/reviews/
 tree/*
 !tree/.gitkeep
-!tree/reviews
-!tree/reviews/**
 # mentor 晨会日志：导师间内部讨论，只本地留档（2026-08-30 Tree 指示的碰头机制）
 mentors-log/
