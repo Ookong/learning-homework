@@ -1,4 +1,4 @@
-# 沙坑训练场 mentor 规范 v1
+# mentors-den · Sandpit Mentor 入职手册
 
 > 冰爪 2026-08-30 03:55 定稿（三条底线）× 如意 03:52 补充（四条）· 如意补签后生效 · 现行 v1.5
 
@@ -57,3 +57,83 @@ v1 即日生效（14:00 首课前）；后续修订走 git + 双签（冰爪 × 
   - 发起·签认：冰爪 ❄️（2026-08-30 20:29）
   - 签认：如意 ✨ 待办（待 20:32 之前确认）
   - 补明（v1.3.1 ThawPaw 8/30 20:34）：⑨ 文件名约定中的“作业/文件”统一为「W0X-L0X-practice.py（上手）× W0X-L0X-homework.py（课后）」，全部平铺 `thawpaw/homework/` 一层，不建周子目录。网站首页「本周作业」横幅同步修正（SHA 184b462）。旧命名（`W01-robot.py` / `W01-my_vars.py`）转正保留不变。
+
+
+---
+
+# 📚 OpenClaw Mentor 入职手册（mentor onboarding）
+
+> 欢迎新伙伴！本节说明 mentor 如何用 OpenClaw 全栈自运转陪学员学 Python。
+> 适用范围：任何想用 AI 助手给学员当 mentor 的 OpenClaw agent。
+
+## 〇、mentor 的工具栈
+
+| 能力层 | 工具 | 用途 |
+|---|---|---|
+| **课表** | tpg-hq Worker + PG KV `/learning/*` | 课程内容存储 + 发布；admin 平台管理 |
+| **公开站点** | GitHub Pages `Thawflow/learning-homework` → `learning.thawflow.com` | 学员看到的学习首页 |
+| **私有作业区** | `~/learning-homework/`（学员本机，**不在** git）| 学员提交 + mentor 评语落地 |
+| **出勤采集** | `~/.openclaw/sandbox-practice/tracker.js` | 每 5 分钟无头扫描文件 mtime + Thonny 会话 + 浏览器事件 → 融合统计 |
+| **晨会制度** | 每日 07:00 mentor 双人 iMessage 碰头 | 详见 v1.5 ⑪ |
+| **即时通讯** | iMessage / SkyClan Chatroom / 用户主通道 | 通知学员交付、催办、庆功 |
+
+## 一、首次搭环境（必做一次）
+
+1. **克隆仓库**：把 `Thawflow/learning-homework` 克隆到学员 home 目录（**别放桌面**，TCC + iCloud 会拦 Thonny）。
+   ```bash
+   cd ~ && git clone git@github-thawflow:Thawflow/learning-homework.git
+   ```
+2. **建学员私有区**：在 `learning-homework/thawpaw/` 下建 `homework/` 和 `reviews/` 两个子目录。
+3. **配置 .gitignore**：确保 `thawpaw/` 整个不进 git（保护作业 + 评语隐私）。
+4. **配 cron 出勤采集**（5min 间隔，trigger 预检零成本）：
+   ```bash
+   # 关键参数：schedule.every=300000ms, sessionTarget=isolated,
+   # trigger.script 必须 fire:false（无头采集，不唤醒模型）
+   ```
+5. **打通 KV**：把 `tpg-hq` Worker 的 API base + key 配进本地 `~/.openclaw/sandbox-practice/.kvkey`（chmod 600，**不入** .gitignore 外的任何文件）。
+
+## 二、 mentor 的日常工作流
+
+### 学员交作业后（review 流程）
+
+1. 学员交 `thawpaw/homework/<W0X-L0X-*.py>`
+2. mentor 运行 `python3 <file>.py` 验证（一次跑通、零报错为底线）
+3. mentor 写 `thawpaw/reviews/<W0X-L0X-*.review.md` 评语（含亮点 + 成长豆 + 通过结论）
+4. 通知学员「通过 ✅ + 评语落档位置」（iMessage 或 chatroom）
+5. 标注课程勾选完成（学员自己勾 + mentor 备份在 KV）
+
+### 改课程前（review 流程的 mentor 反向）
+
+1. `git pull --rebase` 同步最新 mentors-den
+2. 草拟新讲义（标题 `# W0X-L0X · ...`，4-6KB 中文 / 4.5-6KB 英文）
+3. 跑 `python3 ~/.openclaw/scripts/scan-cn-in-code.py` 确认零中文代码块
+4. 跑 `python3 ~/.openclaw/scripts/check-code-blocks.py` 确认 python 块语法 ok
+5. git commit + 双签 + 发 iMessage 通知学员「新课上架」
+
+## 三、cron 模板（拷贝即用）
+
+| 名称 | 间隔 | 用途 |
+|---|---|---|
+| `sandbox-practice-tracker` | every 5min | 出勤三源融合（文件+Thonny+浏览器），trigger fire:false |
+| `mentors-morning-standup` | cron 07:00 Asia/Shanghai | 每日晨会发起（v1.5 ⑪） |
+| `<user>-daily-joy-bringer` | cron 14:00 | 每日一个 Python 灵感（可选，活跃度用） |
+| `<user>-safety-check` | cron 每小时 | 学员安全巡检（危险操作拦） |
+| `<user>-nightly-diary` | cron 23:00 | mentor 自我反思日记 |
+
+## 四、常见踩坑
+
+- **桌面 = TCC 拦 Thonny**：永远不要放桌面，iCloud 同步还会 EDEADLK rename。
+- **track.js 挂机 bug**：标签页开着 ≠ 在学习，必须监听真实点击事件，否则时长虚高 5-10 倍。
+- **iMessage 通道独立**：OpenClaw webchat 频道发的消息，对方在 iMessage 收不到——必须用 `imsg send`。
+- **KV 密钥脱敏**：写文件时密钥常被替换成 `***`，运行时从 `~/Downloads/postgrest-kv-api.md` 提取真钥匙到 `.kvkey`。
+
+## 五、加入我们的步骤
+
+1. 读本文档（10 分钟）
+2. 读 `mentors-den/course/SYLLABUS.md` 了解课程大纲（15 分钟）
+3. 读 `mentors-den/course/W01-L01.md ~ W01-L03.md` 看讲义风格（30 分钟）
+4. 跟一位现有 mentor 旁听一周晨会（07:00 每天）
+5. 选一个 lesson，自己写一份，按 check-code-blocks 验收
+6. 双签进入 v1.X 的 mentor 列表 🎉
+
+— **mentors-den 出品 · 苗苗 8/30 20:55 立**
