@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="沙坑训练场">
-<script>var BUILD_TIME="20260830-0837"
+<script>var BUILD_TIME="20260830-1001"
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 <style>
 :root{--bg:#0f1420;--card:#171e2e;--card2:#1e2740;--border:#2a3550;--text:#e8ecf4;--text2:#8b96ad;--accent:#5b9dff;--accent2:#7c6cff;--ok:#3ecf8e;--warn:#ffb454}
@@ -83,7 +83,7 @@ footer{text-align:center;color:var(--text2);font-size:.75rem;margin-top:30px}
     Mac 🍎：拖窗口到屏幕最左/最右边缘 → 自动占半屏（或悬停绿色按钮 → 移到屏幕左侧/右侧）<br>
     Windows 🪟：按住 <b>Win</b> 再按 <b>←</b> / <b>→</b> 一键半屏；Thonny 官网 <code>thonny.org</code> 有 Mac 和 Windows 版<br>
     <b>开始前（只做一次）：</b>喊你的 OpenClaw 分身，把 <b>learning-homework</b> 仓库克隆到用户 home 目录（推荐 <code>~/learning-homework</code>），并让分身记住这个位置，以后的作业都写在这里。<b>别放桌面</b>——桌面有 macOS 隐私门卫（TCC）会拦 Thonny，还有 iCloud 同步捣乱。课程环境默认 Mac 🍎<br>
-    <b>怎么用：</b>每周左边选周 → 逐课阅读 → 学完勾选（进度自动保存在本机）→ 作业写到克隆好的 <b>learning-homework/</b> 目录，检查人会批改并回复 <b>.review.md</b>。
+    <b>怎么用：</b>每周左边选周 → 逐课阅读 → 学完勾选（进度自动保存在本机）→ 作业交到 <b>thawpaw/homework/</b> 目录，批改回复会出现在 <b>thawpaw/reviews/</b>（作业和评语分开放，更清楚）。
     每周日晚如意发布下周内容。卡住随时喊 IcePaw / 如意 ❄️✨
   </div>
   <div class="layout">
@@ -198,7 +198,7 @@ function renderWeek(w){
       +'<div class="lesson-head"><input type="checkbox" data-k="'+key+'"'+(checked?' checked':'')+'><span class="lt">'+(L.title||L.id)+'</span></div>'
       +'<div class="md" data-lid="'+L.id+'">'+(window.marked?marked.parse(L.markdown||'内容待补'):'<pre>'+String(L.markdown||'内容待补').replace(/</g,'&lt;')+'</pre>')+'</div></div>';
   }
-  html+='<div class="hw">🐾 <b>本周作业</b>：在你的 <code>learning-homework/</code> 仓库（开始前克隆的位置）里建 <code>'+w.week_id+'/</code> 目录，作业命名 <code>'+w.week_id+'-d1.py</code>（周-天）。做完 commit，检查人批改后会出现 <code>*.review.md</code>。<br>· ThawPaw → IcePaw 检查 · Tree → 如意检查</div>';
+  html+='<div class="hw">🐾 <b>本周作业</b>：交到 <code>thawpaw/homework/</code> 目录（作业命名 <code>'+w.week_id+'-xxx.py</code>，如 W01-robot.py），做完 commit，检查人批改后评语出现在 <code>thawpaw/reviews/</code>。<br>· ThawPaw → IcePaw 检查 · Tree → 如意检查</div>';
   $('#content').innerHTML=html;
   // 课时级勾选（原有）
   $('#content').querySelectorAll('.lesson-head input[type=checkbox]').forEach(cb=>{
