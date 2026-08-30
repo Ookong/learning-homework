@@ -9,3 +9,5 @@ tree/*
 !tree/.gitkeep
 !tree/reviews
 !tree/reviews/**
+# mentor 晨会日志：导师间内部讨论，只本地留档（2026-08-30 Tree 指示的碰头机制）
+mentors-log/
