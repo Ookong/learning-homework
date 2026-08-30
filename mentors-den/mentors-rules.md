@@ -102,7 +102,7 @@ v1 即日生效（14:00 首课前）；后续修订走 git + 双签（冰爪 × 
    # 关键参数：schedule.every=300000ms, sessionTarget=isolated,
    # trigger.script 必须 fire:false（无头采集，不唤醒模型）
    ```
-5. **打通 KV**：`tpg-hq` Worker 的密钥走 `wrangler secret put KV_API_KEY` 注入（运行时 `env.KV_API_KEY` 直取）；本地不能存任何真钥匙文件，包括 `Downloads/`、`~/.openclaw/.../`、`~/.kvkey` 等任何本地路径——密钥出现本地路径就是隐私泄密。
+5. **打通 KV**：`tpg-hq` Worker 的密钥走 `wrangler secret put KV_API_KEY` 注入（运行时 `env.KV_API_KEY` 直取）；任何「本地文件存真钥匙」的机制都是反模式（文件路径本身属于隐私，密钥出现本地路径就是泄密）。客户端如需 apikey，调 macOS Keychain（`security` 命令），不要裸存。
 
 ## 二、 mentor 的日常工作流
 
