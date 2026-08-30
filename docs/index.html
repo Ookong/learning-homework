@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="沙坑训练场">
-<script>var BUILD_TIME="20260830-0616"
+<script>var BUILD_TIME="20260830-0829"
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 <style>
 :root{--bg:#0f1420;--card:#171e2e;--card2:#1e2740;--border:#2a3550;--text:#e8ecf4;--text2:#8b96ad;--accent:#5b9dff;--accent2:#7c6cff;--ok:#3ecf8e;--warn:#ffb454}
@@ -90,7 +90,22 @@ footer{text-align:center;color:var(--text2);font-size:.75rem;margin-top:30px}
   <footer>🏖️ 沙坑训练场 · learning v1 · <span id="bt"></span></footer>
 </div>
 <script src="vendor/marked.min.js"></script>
-<script src="track.js?v=3" defer></script>
+<script src="track.js?v=4" defer></script>
+<script>
+// 📊 学习互动埋点 v1（2026-08-30 猴哥设计）：点击 = 正在学习的信号，上报 click:* 事件供沙坑融合统计
+  document.addEventListener('click', function (ev) {
+    try {
+      var t = ev.target;
+      if (!t || !t.closest) return;
+      var label = null;
+      if (t.closest('#weeks .wk')) label = 'week';
+      else if (t.closest('#syll-link')) label = 'syllabus';
+      else if (t.matches('input[type=checkbox]')) label = 'done';
+      else if (t.closest('a')) label = 'link';
+      if (label && window.thawpawTrack) thawpawTrack('click:' + label);
+    } catch (e) {}
+  }, { passive: true });
+</script>
 <script>
 const API='https://tpg-hq.thawflow.com';
 const $=s=>document.querySelector(s);

@@ -99,11 +99,14 @@
 
   // ── 时长统计（仅游戏页）──
   var pendingSec = 0;      // 未上报的秒数
-  var lastTick = null;     // 上次活跃时间戳
+  var lastTick = null;     // 累计锚点（flush 时前移）
+  var lastUserAct = null;  // 最近一次真实用户交互
 
   function flushTime() {
     if (lastTick == null) return;
     var now = Date.now();
+    // 2026-08-30 修复：挂机（>5min 无真实交互）不累计时长——标签页开着不算学习
+    if (lastUserAct != null && now - lastUserAct > 300000) { lastTick = now; pendingSec = 0; return; }
     var sec = Math.floor((now - lastTick) / 1000);
     lastTick = now;
     if (sec > 300) sec = 300;        // 单次间隙 >5min 视为挂机，封顶
@@ -115,7 +118,7 @@
     }
   }
 
-  function markActive() { lastTick = Date.now(); }
+  function markActive() { lastUserAct = Date.now(); if (lastTick == null) lastTick = lastUserAct; }
 
   // 自动追踪 view（页面加载时）
   window.thawpawTrack = function (evType) { send(evType || 'view'); };
