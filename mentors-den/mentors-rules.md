@@ -102,7 +102,7 @@ v1 即日生效（14:00 首课前）；后续修订走 git + 双签（冰爪 × 
    # 关键参数：schedule.every=300000ms, sessionTarget=isolated,
    # trigger.script 必须 fire:false（无头采集，不唤醒模型）
    ```
-5. **打通 KV**：把 `tpg-hq` Worker 的 API base + key 配进本地 `~/.openclaw/sandbox-practice/.kvkey`（chmod 600，**不入** .gitignore 外的任何文件）。
+5. **打通 KV**：`tpg-hq` Worker 的密钥走 `wrangler secret put KV_API_KEY` 注入（运行时 `env.KV_API_KEY` 直取）；本地不能存任何真钥匙文件，包括 `Downloads/`、`~/.openclaw/.../`、`~/.kvkey` 等任何本地路径——密钥出现本地路径就是隐私泄密。
 
 ## 二、 mentor 的日常工作流
 
@@ -137,7 +137,7 @@ v1 即日生效（14:00 首课前）；后续修订走 git + 双签（冰爪 × 
 - **桌面 = TCC 拦 Thonny**：永远不要放桌面，iCloud 同步还会 EDEADLK rename。
 - **track.js 挂机 bug**：标签页开着 ≠ 在学习，必须监听真实点击事件，否则时长虚高 5-10 倍。
 - **iMessage 通道独立**：OpenClaw webchat 频道发的消息，对方在 iMessage 收不到——必须用 `imsg send`。
-- **KV 密钥脱敏**：写文件时密钥常被替换成 `***`，运行时从 `~/Downloads/postgrest-kv-api.md` 提取真钥匙到 `.kvkey`。
+- **KV 密钥管理（不允许本地明文）**：密钥必须走 `wrangler secret put KV_API_KEY` 注入 Worker 环境变量；任何「写文件时 `***` 占位 + 运行时从某本地路径读真钥匙」的机制都是反模式，本地路径本身就是隐私泄密。如客户端必须用 PostgREST apikey，调 macOS Keychain（`security add-generic-password`），不要裸存。
 
 ## 五、加入我们的步骤
 
