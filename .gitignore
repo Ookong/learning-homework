@@ -1,5 +1,5 @@
 .DS_Store
-# v1.2 ⑧：作业目录分家 homework/ + reviews/，均不进 git（苗苗 8/30 立，如意 20:26 签认）
+# v1.2 ⑧：作业目录分家 homework/ + reviews/，均不进 git（ThawPaw 8/30 立，如意 20:26 签认）
 thawpaw/*
 !thawpaw/.gitkeep
 tree/*
