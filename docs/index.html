@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="沙坑训练场">
-<script>var BUILD_TIME="20260830-1235"
+<script>var BUILD_TIME="20260830-1248"
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 <style>
 :root{--bg:#0f1420;--card:#171e2e;--card2:#1e2740;--border:#2a3550;--text:#e8ecf4;--text2:#8b96ad;--accent:#5b9dff;--accent2:#7c6cff;--ok:#3ecf8e;--warn:#ffb454}
@@ -41,6 +41,9 @@ h1{font-size:1.6rem}
 .syll.active{background:var(--card2);border-color:var(--accent);color:var(--text)}
 .wk.done .dot{background:var(--ok)}
 .wk.current .dot{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.lesson-link{font-size:.78rem;padding:5px 10px 5px 26px;margin:-3px 0 4px;color:var(--text2);cursor:pointer;border-left:2px solid transparent;border-radius:0 6px 6px 0;transition:all .12s}
+.lesson-link:hover{background:var(--card2);color:var(--accent);border-left-color:var(--accent)}
+.lesson-link.active{color:var(--accent);border-left-color:var(--accent);font-weight:600}
 .content{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px}
 .wk-title{font-size:1.25rem;margin-bottom:4px}
 .wk-meta{color:var(--text2);font-size:.82rem;margin-bottom:18px}
@@ -111,7 +114,10 @@ footer{text-align:center;color:var(--text2);font-size:.75rem;margin-top:30px}
 <script>
 const API='https://tpg-hq.thawflow.com';
 const $=s=>document.querySelector(s);
-let weeksData=[],curWeek=null;
+let weeksData=[],curWeek=null,lessonCache={};
+function lessonCacheAdd(w){
+  if(!w||!w.week_id)return;
+  lessonCache[w.week_id]=w.lessons||[];
 
 async function fetchJSON(url,timeout){
   const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),timeout||10000);
@@ -146,6 +152,16 @@ function renderWeeks(){
     el.innerHTML='<span class="id">'+w.id+'</span><span class="t">'+(w.title||'')+'</span><span class="dot"></span>';
     el.onclick=()=>loadWeek(w.id);
     box.appendChild(el);
+    // 周点击后拿到 lessons：展开课的迷你链接（v1.3.2 苗苗 8/30 20:47 加）
+    if(curWeek===w.id && lessonCache[w.id]){
+      for(const L of lessonCache[w.id]){
+        const sub=document.createElement('div');
+        sub.className='lesson-link'+(document.querySelector('.md[data-lid="'+(L.id||'')+'"]')?' active':'');
+        sub.textContent='↳ '+L.id+(L.title?' · '+L.title:'');
+        sub.onclick=ev=>{ev.stopPropagation();loadWeek(w.id);setTimeout(()=>{const t=document.querySelector('.md[data-lid="'+(L.id||'')+'"]');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},200);};
+        box.appendChild(sub);
+      }
+    }
   }
 }
 function weekDone(id){
@@ -178,7 +194,7 @@ async function loadWeek(id){
   for(const b of bases){
     try{
       const j=await fetchJSON(b+'/learning/week/'+encodeURIComponent(id),10000);
-      if(j&&j.ok!==false&&j.week){renderWeek(j.week);return}
+      if(j&&j.ok!==false&&j.week){lessonCacheAdd(j.week);renderWeeks();renderWeek(j.week);return}
     }catch(e){}
   }
   $('#content').innerHTML='<div class="empty"><div class="big">📡</div>拉取 '+id+' 失败（两个域名都超时/不通，手机流量下常见）<br><br><button onclick="loadWeek(\''+id+'\')" style="margin-top:12px;padding:8px 20px;border-radius:10px;border:1px solid var(--accent);background:var(--card2);color:var(--accent);cursor:pointer">重试</button></div>';
