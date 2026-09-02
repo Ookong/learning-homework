@@ -1,5 +1,5 @@
-// 🏖️ 沙坑训练场 Service Worker v2 — 网络优先，离线兜底（外壳）
-const CACHE = 'sandy-hollow-v2';
+// 🏖️ 沙坑训练场 Service Worker v3 — 网络优先，离线兜底（外壳）
+const CACHE = 'sandy-hollow-v3';
 const SHELL = ['./', './index.html', './vendor/marked.min.js', './assets/favicon.svg', './assets/icon-192.png', './assets/icon-512.png'];
 
 self.addEventListener('install', e => {

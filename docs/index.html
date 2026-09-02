@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="沙坑训练场">
-<script>var BUILD_TIME="20260901-1750"
+<script>var BUILD_TIME="20260902-0945"
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 <style>
 :root{--bg:#0f1420;--card:#171e2e;--card2:#1e2740;--border:#2a3550;--text:#e8ecf4;--text2:#8b96ad;--accent:#5b9dff;--accent2:#7c6cff;--ok:#3ecf8e;--warn:#ffb454}
@@ -118,29 +118,57 @@ let weeksData=[],curWeek=null,lessonCache={};
 function lessonCacheAdd(w){
   if(!w||!w.week_id)return;
   lessonCache[w.week_id]=w.lessons||[];
+}
 
 async function fetchJSON(url,timeout){
   const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),timeout||10000);
   try{const r=await fetch(url,{signal:ctl.signal});return await r.json();}finally{clearTimeout(t);}
 }
-async function loadIndex(){
-  // 双域名：thawflow 主，workers.dev 备（移动网络可达性不同）；10s 超时防挂起转圈
+// —— 治转圈三件套（2026-09-02 连夜修）：本地缓存秒开 + 双域名竞速 + 后台静默刷新 ——
+// 根因：数据层零缓存 + 串行双域名各 10s 超时；慢域名+兜底也慢 = 每次打开必转圈 5-20s
+function lsGet(k){try{return JSON.parse(localStorage.getItem('learning-c:'+k))}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem('learning-c:'+k,JSON.stringify(v))}catch(e){}}
+function raceJSON(path,timeout){
   const bases=[API,'https://tpg-hq.icepaw.workers.dev'];
-  let lastErr=null;
-  for(const b of bases){
-    try{const j=await fetchJSON(b+'/learning/weeks',10000);weeksData=(j.index&&j.index.weeks)||[];if(j.ok!==false){lastErr=null;break}}catch(e){lastErr=e;weeksData=[]}
+  return new Promise((res,rej)=>{
+    let pend=bases.length,won=false;
+    for(const b of bases){
+      fetchJSON(b+path,timeout||8000).then(j=>{
+        if(won)return;
+        if(j&&j.ok!==false){won=true;res(j)}
+        else if(--pend===0)rej(new Error('api ok:false'));
+      }).catch(()=>{if(!won&&--pend===0)rej(new Error('all bases failed'))});
+    }
+  });
+}
+async function loadIndex(){
+  // 缓存优先：本地秒开 → 后台竞速刷新（网络挂了也照常用旧数据）
+  const cached=lsGet('weeks');
+  if(cached&&cached.length){
+    weeksData=cached;renderWeeks();
+    const c0=weeksData.find(w=>w.current)||weeksData[weeksData.length-1];
+    if(c0)loadWeek(c0.id);
   }
-  renderWeeks();
-  if(lastErr){
-    $('#content').innerHTML='<div class="empty"><div class="big">📡</div><b>课程加载失败</b><br><br>网络不通或太慢（手机流量下常见）。<br><button onclick="loadIndex()" style="margin-top:12px;padding:8px 22px;border-radius:9px;border:1px solid var(--accent);background:var(--card2);color:var(--accent);cursor:pointer">🔄 重试</button></div>';
-    return;
+  try{
+    const j=await raceJSON('/learning/weeks');
+    const wks=(j.index&&j.index.weeks)||[];
+    if(wks.length){
+      lsSet('weeks',wks);weeksData=wks;renderWeeks();
+      if(!cached||!cached.length){
+        const c=weeksData.find(w=>w.current)||weeksData[weeksData.length-1];
+        if(c)loadWeek(c.id);
+      }
+    }
+  }catch(e){
+    if(!cached||!cached.length){
+      $('#content').innerHTML='<div class="empty"><div class="big">📡</div><b>课程加载失败</b><br><br>网络不通或太慢（手机流量下常见）。<br><button onclick="loadIndex()" style="margin-top:12px;padding:8px 22px;border-radius:9px;border:1px solid var(--accent);background:var(--card2);color:var(--accent);cursor:pointer">🔄 重试</button></div>';
+      return;
+    }
   }
   if(!weeksData.length){
     $('#content').innerHTML='<div class="empty"><div class="big">🌱</div><b>第一周课程还在路上</b><br><br>如意正在上传 W01 内容（今晚就绪）。<br>先去把 VS Code 打开热热身——你的第一个程序 clan.py 还等着跑第 6 次呢 🐾</div>';
     return;
   }
-  const cur=weeksData.find(w=>w.current)||weeksData[weeksData.length-1];
-  if(cur)loadWeek(cur.id);
 }
 function renderWeeks(){
   const box=$('#weeks');box.innerHTML='';
@@ -171,33 +199,39 @@ function weekDone(id){
 async function loadSyllabus(){
   curWeek=null;renderWeeks();
   const sl=$('#syll-link');if(sl)sl.classList.add('active');
-  $('#content').innerHTML='<div class="spin"></div>';
-  const bases=[API,'https://tpg-hq.icepaw.workers.dev'];
-  for(const b of bases){
-    try{
-      const j=await fetchJSON(b+'/learning/syllabus',10000);
-      if(j&&j.ok!==false&&j.syllabus){
-        $('#content').innerHTML='<div class="wk-title">📑 课程总大纲</div><div class="wk-meta">12 周 · 一套材料，两位学员</div><div class="md">'+(window.marked?marked.parse(j.syllabus):j.syllabus)+'</div>';
-        return;
-      }
-      if(j&&j.ok!==false)break;
-    }catch(e){}
+  const c=lsGet('syll');
+  if(c)renderSyll(c);
+  else $('#content').innerHTML='<div class="spin"></div>';
+  try{
+    const j=await raceJSON('/learning/syllabus');
+    if(j&&j.syllabus){
+      lsSet('syll',j.syllabus);
+      if(curWeek===null&&j.syllabus!==c)renderSyll(j.syllabus);
+    }
+  }catch(e){
+    if(!c)$('#content').innerHTML='<div class="empty"><div class="big">📑</div><b>大纲还在路上</b><br><br>课程总大纲还没发布到线上。<br><button onclick="loadSyllabus()" style="margin-top:12px;padding:8px 22px;border-radius:9px;border:1px solid var(--accent);background:var(--card2);color:var(--accent);cursor:pointer">🔄 重试</button></div>';
   }
-  $('#content').innerHTML='<div class="empty"><div class="big">📑</div><b>大纲还在路上</b><br><br>课程总大纲还没发布到线上。<br><button onclick="loadSyllabus()" style="margin-top:12px;padding:8px 22px;border-radius:9px;border:1px solid var(--accent);background:var(--card2);color:var(--accent);cursor:pointer">🔄 重试</button></div>';
+}
+function renderSyll(md){
+  $('#content').innerHTML='<div class="wk-title">📑 课程总大纲</div><div class="wk-meta">12 周 · 一套材料，两位学员</div><div class="md">'+(window.marked?marked.parse(md):md)+'</div>';
 }
 async function loadWeek(id){
   curWeek=id;
   const sl=$('#syll-link');if(sl)sl.classList.remove('active');
-  $('#content').innerHTML='<div class="spin"></div>';
-  renderWeeks();
-  const bases=[API,'https://tpg-hq.icepaw.workers.dev'];
-  for(const b of bases){
-    try{
-      const j=await fetchJSON(b+'/learning/week/'+encodeURIComponent(id),10000);
-      if(j&&j.ok!==false&&j.week){lessonCacheAdd(j.week);renderWeeks();renderWeek(j.week);return}
-    }catch(e){}
+  // 缓存优先：localStorage 秒开，后台竞速刷新（内容有变才重渲染，防滚动位置被打断）
+  const c=lsGet('wk:'+id);
+  if(c){renderWeeks();renderWeek(c);}
+  else{$('#content').innerHTML='<div class="spin"></div>';renderWeeks();}
+  try{
+    const j=await raceJSON('/learning/week/'+encodeURIComponent(id));
+    if(j&&j.week){
+      lsSet('wk:'+id,j.week);lessonCacheAdd(j.week);
+      if(curWeek===id&&JSON.stringify(j.week)!==JSON.stringify(c))renderWeek(j.week);
+      renderWeeks();
+    }
+  }catch(e){
+    if(!c)$('#content').innerHTML='<div class="empty"><div class="big">📡</div>拉取 '+id+' 失败（两个域名都超时/不通，手机流量下常见）<br><br><button onclick="loadWeek(\''+id+'\')" style="margin-top:12px;padding:8px 20px;border-radius:10px;border:1px solid var(--accent);background:var(--card2);color:var(--accent);cursor:pointer">重试</button></div>';
   }
-  $('#content').innerHTML='<div class="empty"><div class="big">📡</div>拉取 '+id+' 失败（两个域名都超时/不通，手机流量下常见）<br><br><button onclick="loadWeek(\''+id+'\')" style="margin-top:12px;padding:8px 20px;border-radius:10px;border:1px solid var(--accent);background:var(--card2);color:var(--accent);cursor:pointer">重试</button></div>';
 }
 function renderWeek(w){
   const lessons=w.lessons||[];
