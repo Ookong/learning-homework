@@ -1,0 +1,53 @@
+#!/bin/bash
+# pre-commit：HTML 内嵌 JS 语法门禁（沙坑事故 2026-09-02 防再犯 #1）
+# 规则：staged 的 .html 抽出内嵌 <script> 块逐块 node --check；staged 的 .js 直接 check
+# 不过 = 拒绝 commit。绕过（紧急情况）：git commit --no-verify（需事后补查）
+#
+# 启用（每台机器一次，clone 不自带 hooks）：
+#   cd ~/learning-homework && git config core.hooksPath .githooks && chmod +x .githooks/pre-commit
+
+FAIL=0
+
+# 1) staged 的 .js 文件
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep '\.js$' || true); do
+  [ -f "$f" ] || continue
+  if ! node --check "$f" 2>/tmp/hook-js-err; then
+    echo "❌ $f 语法错误："; cat /tmp/hook-js-err; FAIL=1
+  fi
+done
+
+# 2) staged 的 .html：抽内嵌 script 块
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep '\.html$' || true); do
+  [ -f "$f" ] || continue
+  if ! python3 - "$f" <<'PYEOF'
+import re, sys, subprocess, tempfile, os
+path = sys.argv[1]
+html = open(path, encoding='utf-8').read()
+blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S | re.I)
+bad = 0
+for i, code in enumerate(blocks):
+    if not code.strip():
+        continue
+    with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8') as t:
+        t.write(code)
+        tmp = t.name
+    r = subprocess.run(['node', '--check', tmp], capture_output=True, text=True)
+    os.unlink(tmp)
+    if r.returncode != 0:
+        bad += 1
+        print(f"❌ {path} 内嵌 script 块 #{i+1} 语法错误：\n{r.stderr}", file=sys.stderr)
+sys.exit(1 if bad else 0)
+PYEOF
+  then
+    FAIL=1
+  fi
+done
+
+if [ $FAIL -ne 0 ]; then
+  echo ""
+  echo "🚫 pre-commit 拒绝：JS 语法错误（2026-09-02 沙坑事故防再犯，一个括号死全站）"
+  echo "   自查：bash .githooks/pre-commit（staged 后跑）；修完再 commit"
+  exit 1
+fi
+echo "✅ JS 语法门禁通过"
+exit 0
