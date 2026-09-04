@@ -85,7 +85,8 @@ footer{text-align:center;color:var(--text2);font-size:.75rem;margin-top:30px}
     Mac 🍎：拖窗口到屏幕最左/最右边缘 → 自动占半屏（或悬停绿色按钮 → 移到屏幕左侧/右侧）<br>
     Windows 🪟：按住 <b>Win</b> 再按 <b>←</b> / <b>→</b> 一键半屏；Thonny 官网 <code>thonny.org</code> 有 Mac 和 Windows 版<br>
     <b>开始前（只做一次）：</b>喊你的 OpenClaw 分身，把 <b>learning-homework</b> 仓库克隆到用户 home 目录（推荐 <code>~/learning-homework</code>），并让分身记住这个位置，以后的作业都写在这里。<b>别放桌面</b>——桌面有 macOS 隐私门卫（TCC）会拦 Thonny，还有 iCloud 同步捣乱。课程环境默认 Mac 🍎<br>
-    <b>怎么用：</b>每周左边选周 → 逐课阅读 → 学完勾选（进度自动保存在本机）→ 作业交到 <b>thawpaw/homework/</b> 目录，批改回复会出现在 <b>thawpaw/reviews/</b>（作业和评语分开放，更清楚）。
+    <b>克隆后告诉分身三件事：</b>①仓库地址是 <code>https://github.com/Thawflow/learning-homework</code>（方便其他学员复制粘贴）；②读 <code>mentors-den/mentors-rules.md</code> 上岗手册（分身能自动 review 你的作业）；③帮你创建学员目录（<code>&lt;你的学员名&gt;/homework/</code>，如 <code>thawpaw/homework/</code>、<code>tree/homework/</code>、或你自创的英文名）并把这个路径记到它的 MEMORY/USER，以后作业统一放这里。<br>
+    <b>怎么用：</b>每周左边选周 → 逐课阅读 → 学完勾选（进度自动保存在本机）→ 作业交到 <b>&lt;你的学员目录&gt;/homework/</b> 目录（如 <code>thawpaw/homework/</code>、<code>tree/homework/</code>），批改回复会出现在 <b>&lt;你的学员目录&gt;/reviews/</b>（作业和评语分开放，更清楚）。
     每周日晚如意发布下周内容。卡住随时喊 IcePaw / 如意 ❄️✨
   </div>
   <div class="layout">
@@ -241,7 +242,7 @@ function renderWeek(w){
       +'<div class="lesson-head"><span class="lt">'+(L.title||L.id)+'</span></div>'
       +'<div class="md" data-lid="'+L.id+'">'+(window.marked?marked.parse(L.markdown||'内容待补'):'<pre>'+String(L.markdown||'内容待补').replace(/</g,'&lt;')+'</pre>')+'</div></div>';
   }
-  html+='<div class="hw">🐾 <b>本周作业</b>（以 ThawPaw 为例）：交到 <code>thawpaw/homework/</code> 目录（Tree 对应 <code>tree/homework/</code>；命名 <code>'+w.week_id+'-LXX-practice.py</code> 上手练习 / <code>'+w.week_id+'-LXX-homework.py</code> 课后作业，平铺不建周子目录）。<b>交完作业要跟各自的 mentor 说一声才会批改</b>（ThawPaw → IcePaw 检查 · Tree → 如意检查），评语出现在各自的 <code>reviews/</code> 目录。</div>';
+  html+='<div class="hw">🐾 <b>本周作业</b>：交到 <code>&lt;你的学员目录&gt;/homework/</code> 目录（每位学员用自己起的英文目录名，常见示例：<code>thawpaw/homework/</code>、<code>tree/homework/</code>；命名 <code>'+w.week_id+'-LXX-practice.py</code> 上手练习 / <code>'+w.week_id+'-LXX-homework.py</code> 课后作业，平铺不建周子目录）。<b>交完作业要跟各自的 mentor 说一声才会批改</b>（ThawPaw → IcePaw 检查 · Tree → 如意检查），评语出现在各自的 <code>reviews/</code> 目录。</div>';
   $('#content').innerHTML=html;
   // 课文内自查清单 checkbox：激活 marked 默认 disabled + 本机持久化（2026-08-30 Tree 反馈）
   // 注：本段必须活在 renderWeek 内——每次渲染后重新激活，放函数外只在首载空跑一次（本次修复的根因）
